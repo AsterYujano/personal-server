@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+
+  reverse-proxy:
+    image: traefik:v2.0
+    container_name: "traefik"
+    command: 
+#     - "--log.level=DEBUG"
+#      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.mytlschallenge.acme.tlschallenge=true"
+      - "--certificatesresolvers.mytlschallenge.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json"
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+
+
+       #  whoami:
+       #    image: containous/whoami
+       #    labels:
+       #      - "traefik.enable=true"
+       #      - "traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN}`)"
+       #      - "traefik.http.routers.whoami.entrypoints=websecure"
+       #      - "traefik.http.routers.whoami.tls.certresolver=mytlschallenge"
+        
+
+
+  miniflux:
+    image: miniflux/miniflux:latest
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/miniflux?sslmode=disable
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.miniflux.rule=Host(`miniflux.${DOMAIN}`)"
+      - "traefik.http.routers.miniflux.entrypoints=websecure"
+      - "traefik.http.routers.miniflux.tls.certresolver=mytlschallenge"
+      # Redirect HTTP to HTTPS  
+      - "traefik.http.middlewares.test-redirectscheme.redirectscheme.scheme=https"
+
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - miniflux-db:/var/lib/postgresql/data
+ 
+
+
+volumes:
+  miniflux-db:
+
+

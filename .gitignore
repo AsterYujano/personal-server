@@ -3,3 +3,4 @@ traefik/letsencrypt/
 acme.json
 .env.telegram
 backup/
+bw-data

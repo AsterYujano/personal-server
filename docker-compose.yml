@@ -23,18 +23,6 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
-
-
-       #  whoami:
-       #    image: containous/whoami
-       #    labels:
-       #      - "traefik.enable=true"
-       #      - "traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN}`)"
-       #      - "traefik.http.routers.whoami.entrypoints=websecure"
-       #      - "traefik.http.routers.whoami.tls.certresolver=mytlschallenge"
-        
-
-
   miniflux:
     image: miniflux/miniflux:latest
     depends_on:
@@ -62,9 +50,56 @@ services:
     volumes:
       - miniflux-db:/var/lib/postgresql/data
  
+    #  wp_db:
+    #    image: mysql:5.7
+    #    volumes:
+    #      - db_data:/var/lib/mysql
+    #    restart: always
+    #    environment:
+    #      MYSQL_ROOT_PASSWORD: kjdnwjdmqwldmqwdq5?6789dqhwbdkwqjd
+    #      MYSQL_DATABASE: wordpress_database
+    #      MYSQL_USER: user65789dwmjkqnddq
+    #      MYSQL_PASSWORD: qwmnd67890qwdqwdqwdqh!n
+
+    #  wordpress:
+    #    depends_on:
+    #      - db
+    #    image: wordpress:latest
+    #    ports:
+    #      - "8000:80"
+    #    restart: always
+    #    environment:
+    #      WORDPRESS_DB_HOST: wp_db:3306
+    #      WORDPRESS_DB_USER: user65789dwmjkqnddq
+    #      WORDPRESS_DB_PASSWORD: qwmnd67890qwdqwdqwdqh!n
+    #      WORDPRESS_DB_NAME: wordpress_database
+    #    labels:
+    #      - "traefik.enable=true"
+    #      - "traefik.http.routers.cooking.rule=Host(`cooking.${DOMAIN}`)"
+    #      - "traefik.http.routers.cooking.entrypoints=websecure"
+    #      - "traefik.http.routers.cooking.tls.certresolver=mytlschallenge"
+    #      # Redirect HTTP to HTTPS  
+    #      - "traefik.http.middlewares.test-redirectscheme.redirectscheme.scheme=https"
+
+  bitwardenrs:
+    container_name: bitwardenrs
+    image: bitwardenrs/server:latest
+    volumes:
+      - ./bw-data/:/data/
+    environment:
+      SIGNUPS_ALLOWED: 'true'   # set to false to disable signups
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pass.rule=Host(`pass.${DOMAIN}`)"
+      - "traefik.http.routers.pass.entrypoints=websecure"
+      - "traefik.http.routers.pass.tls.certresolver=mytlschallenge"
+      # Redirect HTTP to HTTPS
+      - "traefik.http.middlewares.test-redirectscheme.redirectscheme.scheme=https"
+
+
 
 
 volumes:
   miniflux-db:
-
+  db_data: {}
 
